@@ -2,32 +2,60 @@
 #Install nginx and wetty on RHEL 7 for http login using port 8888
 #These instructions are from this video on youtube - https://www.youtube.com/watch?v=gjHYl81t2bI
 
+
+# User input
+SETUSERPASSWD="no"
+#SETUSERPASSWD="yes"
+USERNAME="ec2-user"
+PASSWORD="redhat"
+LOGINPORT=80
+# End of user input
+
+PACKAGES="nginx git gcc gcc-c++ openssl-devel npm nodejs"
+
+
+if [[ $EUID != "0" ]]
+then
+	echo "ERROR. Need to have root privileges to run this script"
+	exit 1
+fi
+
+
+
 cd /tmp
-sudo yum install wget -y
+yum install -y -q wget
 wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo yum install epel-release-latest-7.noarch.rpm -y
-sudo rm -rf epel-release-latest-7.noarch.rpm
-sudo yum install nginx git gcc gcc-c++ openssl-devel -y
+yum install -y -q epel-release-latest-7.noarch.rpm
+rm -rf epel-release-latest-7.noarch.rpm
+#yum install nginx git gcc gcc-c++ openssl-devel -y
+yum install -y -q $PACKAGES
 wget https://nodejs.org/dist/v8.9.4/node-v8.9.4.tar.gz
-sudo mv node-v8.9.4.tar.gz /usr/local/src/
+mv node-v8.9.4.tar.gz /usr/local/src/
 cd /usr/local/src
-sudo tar -xvzf node-v8.9.4.tar.gz 
+tar -xvzf node-v8.9.4.tar.gz 
 cd node-v8.9.4
-sudo ./configure
+./configure
 
-#The following make can take more take 30 minutes
-sudo make
+# The following make can take more than an hour to complete
+make
+make install
+#yum -y install npm nodejs
+#chmod o+x /root
+# End of make
 
-sudo make install
-sudo yum install npm nodejs
-sudo chmod o+x /root
-cd /root
-sudo git clone https://github.com/krishnasrinivas/wetty
+
+cd /usr/local/src
+git clone https://github.com/krishnasrinivas/wetty
 cd wetty
-sudo npm install -y
+npm install -y
+
+exit 1
 
 #Setting the password for weblogin
-echo "redhat" | sudo passwd ec2-user --stdin
+if [[ $SETUSERPASSWD == "yes" ]]
+then
+	echo "$PASSWORD" | passwd $USERNAME --stdin
+fi
 
-sudo node app.js -p 8888
+node app.js -p $PORT &
 
