@@ -13,7 +13,6 @@ LOGINPORT=80
 
 PACKAGES="nginx git gcc gcc-c++ openssl-devel npm nodejs"
 
-
 if [[ $EUID != "0" ]]
 then
 	echo "ERROR. Need to have root privileges to run this script"
@@ -49,8 +48,6 @@ git clone https://github.com/krishnasrinivas/wetty
 cd wetty
 npm install -y
 
-exit 1
-
 #Setting the password for weblogin
 if [[ $SETUSERPASSWD == "yes" ]]
 then
@@ -59,3 +56,5 @@ fi
 
 node app.js -p $PORT &
 
+echo `date`
+echo "Initialization Complete"
